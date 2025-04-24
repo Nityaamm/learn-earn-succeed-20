@@ -1,9 +1,9 @@
-
 export interface VideoReel {
   id: number;
   title: string;
   thumbnail: string;
   videoUrl: string;
+  isYouTube?: boolean;
   duration: string;
   views: string;
 }
@@ -11,11 +11,12 @@ export interface VideoReel {
 export const reels: VideoReel[] = [
   {
     id: 1,
-    title: "Introduction to React Hooks",
-    thumbnail: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=800&q=80",
-    videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-programming-concept-with-person-typing-code-on-laptop-10364-large.mp4",
-    duration: "2:30",
-    views: "1.2k"
+    title: "Programming Tutorial",
+    thumbnail: "https://i.ytimg.com/vi/tB04GWlZcaU/maxresdefault.jpg",
+    videoUrl: "https://www.youtube.com/embed/tB04GWlZcaU",
+    isYouTube: true,
+    duration: "0:30",
+    views: "10k"
   },
   {
     id: 2,

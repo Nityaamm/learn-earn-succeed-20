@@ -13,7 +13,9 @@ const VideoCard = ({ reel }: VideoCardProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const togglePlay = () => {
-    if (videoRef.current) {
+    if (reel.isYouTube) {
+      setIsPlaying(true);
+    } else if (videoRef.current) {
       if (isPlaying) {
         videoRef.current.pause();
         setIsPlaying(false);
@@ -33,25 +35,52 @@ const VideoCard = ({ reel }: VideoCardProps) => {
   return (
     <Card className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow">
       <CardContent className="p-0 aspect-video relative group">
-        <video
-          ref={videoRef}
-          src={reel.videoUrl}
-          className="w-full h-full object-cover"
-          poster={reel.thumbnail}
-          preload="metadata"
-          onEnded={() => setIsPlaying(false)}
-        />
-        
-        <div 
-          className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-100 group-hover:opacity-100 transition-opacity"
-          onClick={togglePlay}
-        >
-          {isPlaying ? (
-            <Pause className="w-12 h-12 text-white" />
+        {reel.isYouTube ? (
+          isPlaying ? (
+            <iframe
+              src={`${reel.videoUrl}?autoplay=1`}
+              className="w-full h-full"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
           ) : (
-            <PlayCircle className="w-12 h-12 text-white" />
-          )}
-        </div>
+            <>
+              <img
+                src={reel.thumbnail}
+                alt={reel.title}
+                className="w-full h-full object-cover"
+              />
+              <div 
+                className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-100 group-hover:opacity-100 transition-opacity"
+                onClick={togglePlay}
+              >
+                <PlayCircle className="w-12 h-12 text-white" />
+              </div>
+            </>
+          )
+        ) : (
+          <>
+            <video
+              ref={videoRef}
+              src={reel.videoUrl}
+              className="w-full h-full object-cover"
+              poster={reel.thumbnail}
+              preload="metadata"
+              onEnded={() => setIsPlaying(false)}
+            />
+            
+            <div 
+              className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-100 group-hover:opacity-100 transition-opacity"
+              onClick={togglePlay}
+            >
+              {isPlaying ? (
+                <Pause className="w-12 h-12 text-white" />
+              ) : (
+                <PlayCircle className="w-12 h-12 text-white" />
+              )}
+            </div>
+          </>
+        )}
         
         <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
           <h3 className="text-white font-medium mb-1">{reel.title}</h3>
