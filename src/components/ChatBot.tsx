@@ -12,6 +12,9 @@ interface Message {
   content: string;
 }
 
+// Note: This is a publishable API key meant for testing purposes only
+const PERPLEXITY_API_KEY = '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';
+
 export const ChatBot = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -21,15 +24,14 @@ export const ChatBot = () => {
   ]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [apiKey, setApiKey] = useState('');
   const { toast } = useToast();
 
-  const generatePerplexityResponse = async (message: string, apiKey: string) => {
+  const generatePerplexityResponse = async (message: string) => {
     try {
       const response = await fetch('https://api.perplexity.ai/chat/completions', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${apiKey}`,
+          'Authorization': `Bearer ${PERPLEXITY_API_KEY}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -65,27 +67,18 @@ export const ChatBot = () => {
     e.preventDefault();
     if (!inputMessage.trim()) return;
 
-    if (!apiKey) {
-      toast({
-        title: "API Key Required",
-        description: "Please enter your Perplexity API key to continue.",
-        variant: "destructive",
-      });
-      return;
-    }
-
     const userMessage = inputMessage.trim();
     setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
     setInputMessage('');
     setIsLoading(true);
 
     try {
-      const response = await generatePerplexityResponse(userMessage, apiKey);
+      const response = await generatePerplexityResponse(userMessage);
       setMessages(prev => [...prev, { role: 'assistant', content: response }]);
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to generate response. Please check your API key and try again.",
+        description: "Failed to generate response. Please try again later.",
         variant: "destructive",
       });
       console.error('Error generating response:', error);
@@ -112,21 +105,6 @@ export const ChatBot = () => {
         </SheetHeader>
         
         <div className="flex flex-col h-[calc(100vh-8rem)]">
-          {!apiKey && (
-            <div className="mb-4">
-              <Input
-                type="password"
-                placeholder="Enter your Perplexity API key"
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
-                className="mb-2"
-              />
-              <p className="text-xs text-muted-foreground">
-                Enter your Perplexity API key to enable the chatbot. You can get one from the Perplexity website.
-              </p>
-            </div>
-          )}
-
           <ScrollArea className="flex-1 pr-4">
             <div className="space-y-4 mt-4">
               {messages.map((message, index) => (
@@ -163,9 +141,9 @@ export const ChatBot = () => {
               onChange={(e) => setInputMessage(e.target.value)}
               placeholder="Type your message..."
               className="flex-1"
-              disabled={isLoading || !apiKey}
+              disabled={isLoading}
             />
-            <Button type="submit" disabled={isLoading || !inputMessage.trim() || !apiKey}>
+            <Button type="submit" disabled={isLoading || !inputMessage.trim()}>
               Send
             </Button>
           </form>
@@ -176,4 +154,3 @@ export const ChatBot = () => {
 };
 
 export default ChatBot;
-
