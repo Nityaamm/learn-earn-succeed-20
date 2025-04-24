@@ -206,30 +206,26 @@ const MyCourses = () => {
           <div className="mt-8 flex flex-col items-center">
             <Card className="w-full max-w-md text-center">
               <CardHeader>
-                <CardTitle>Ready for the Final Test?</CardTitle>
+                <CardTitle>Final Test</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  Complete the test to measure your understanding. Your performance will determine your refund amount - score 90% and get a 90% refund!
+                  Take the test to measure your understanding. Your performance will determine your refund amount - score 90% and get a 90% refund!
+                  {courseData.hasTakenTest && (
+                    <span className="block mt-2">
+                      Previous best score: {courseData.testScore}%
+                    </span>
+                  )}
                 </p>
               </CardContent>
               <CardFooter className="flex justify-center">
-                {courseData.hasTakenTest ? (
-                  <div className="text-center">
-                    <div className="mb-2 flex items-center justify-center gap-2">
-                      <Award className="h-5 w-5 text-primary" />
-                      <span className="font-medium">Your Test Score: {courseData.testScore}%</span>
-                    </div>
-                  </div>
-                ) : (
-                  <Button 
-                    onClick={() => navigate(`/courses/${courseData.id}/test`)}
-                    className="w-full max-w-xs"
-                  >
-                    <FileText className="mr-2 h-4 w-4" />
-                    Take Final Test
-                  </Button>
-                )}
+                <Button 
+                  onClick={() => navigate(`/courses/${courseData.id}/test`)}
+                  className="w-full max-w-xs"
+                >
+                  <FileText className="mr-2 h-4 w-4" />
+                  {courseData.hasTakenTest ? 'Retake Test' : 'Take Final Test'}
+                </Button>
               </CardFooter>
             </Card>
           </div>
@@ -280,22 +276,13 @@ const MyCourses = () => {
                     <BookOpen className="mr-2 h-4 w-4" />
                     View Course Materials
                   </Button>
-                  {course.hasTakenTest ? (
-                    <div className="w-full text-center p-2 bg-muted rounded-md">
-                      <div className="flex items-center justify-center gap-2">
-                        <Award className="h-4 w-4 text-primary" />
-                        <span>Final Score: {course.testScore}%</span>
-                      </div>
-                    </div>
-                  ) : (
-                    <Button
-                      onClick={() => navigate(`/courses/${course.id}/test`)}
-                      className="w-full"
-                    >
-                      <FileText className="mr-2 h-4 w-4" />
-                      Take Final Test
-                    </Button>
-                  )}
+                  <Button
+                    onClick={() => navigate(`/courses/${course.id}/test`)}
+                    className="w-full"
+                  >
+                    <FileText className="mr-2 h-4 w-4" />
+                    {course.hasTakenTest ? 'Retake Test' : 'Take Final Test'}
+                  </Button>
                 </CardFooter>
               </Card>
             ))}
