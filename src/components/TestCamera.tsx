@@ -10,16 +10,18 @@ const TestCamera = ({ isTestSubmitted = false }: TestCameraProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [error, setError] = useState<string>('');
   const { toast } = useToast();
+  const [stream, setStream] = useState<MediaStream | null>(null);
 
   useEffect(() => {
     const startCamera = async () => {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ 
+        const mediaStream = await navigator.mediaDevices.getUserMedia({ 
           video: { width: 320, height: 240 } 
         });
         
         if (videoRef.current) {
-          videoRef.current.srcObject = stream;
+          videoRef.current.srcObject = mediaStream;
+          setStream(mediaStream);
         }
       } catch (err) {
         setError('Could not access camera');
@@ -31,18 +33,36 @@ const TestCamera = ({ isTestSubmitted = false }: TestCameraProps) => {
       }
     };
 
+    // Start camera when component mounts and test is not submitted
     if (!isTestSubmitted) {
       startCamera();
     }
-
+    
+    // Stop camera when test is submitted or component unmounts
     return () => {
-      // Clean up video stream when component unmounts or test is submitted
-      if (videoRef.current && videoRef.current.srcObject) {
-        const stream = videoRef.current.srcObject as MediaStream;
-        stream.getTracks().forEach(track => track.stop());
+      if (stream) {
+        stream.getTracks().forEach(track => {
+          track.stop();
+        });
+        setStream(null);
       }
     };
   }, [toast, isTestSubmitted]);
+
+  // Also explicitly stop the camera when isTestSubmitted changes to true
+  useEffect(() => {
+    if (isTestSubmitted && stream) {
+      stream.getTracks().forEach(track => {
+        track.stop();
+      });
+      setStream(null);
+      
+      // Also clear the video element's srcObject
+      if (videoRef.current) {
+        videoRef.current.srcObject = null;
+      }
+    }
+  }, [isTestSubmitted, stream]);
 
   if (isTestSubmitted || error) {
     return null;
