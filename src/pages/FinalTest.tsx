@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -11,8 +10,8 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Progress } from "@/components/ui/progress";
 import { CheckCircle, Award, PiggyBank } from "lucide-react";
+import TestCamera from "@/components/TestCamera";
 
-// Mock data - In a real app, this would come from your backend
 const mockTests = {
   "1": {
     questions: [
@@ -150,7 +149,6 @@ const FinalTest: React.FC = () => {
   const [courseData, setCourseData] = React.useState<any>(null);
   const [refundAmount, setRefundAmount] = React.useState(0);
   
-  // Check if user is logged in and enrolled in the course
   React.useEffect(() => {
     if (!isLoggedIn) {
       toast({
@@ -162,7 +160,6 @@ const FinalTest: React.FC = () => {
       return;
     }
     
-    // Get enrolled courses from local storage
     const storedCoursesString = localStorage.getItem('enrolledCourses');
     if (!storedCoursesString) {
       toast({
@@ -188,23 +185,10 @@ const FinalTest: React.FC = () => {
         return;
       }
       
-      // Check if test is already taken
-      if (enrolledCourse.hasTakenTest) {
-        toast({
-          title: "Test already taken",
-          description: "You have already taken the final test for this course",
-          variant: "default"
-        });
-        navigate("/my-courses");
-        return;
-      }
-      
-      // Store course data
       setCourseTitle(enrolledCourse.title);
       setCoursePrice(enrolledCourse.price);
       setCourseData(enrolledCourse);
       
-      // Get test data from mock data
       const test = mockTests[id as keyof typeof mockTests];
       if (test) {
         setTestData(test);
@@ -249,7 +233,6 @@ const FinalTest: React.FC = () => {
   };
   
   const handleSubmit = () => {
-    // Check if all questions are answered
     const unansweredQuestions = selectedAnswers.filter(answer => answer === -1).length;
     
     if (unansweredQuestions > 0) {
@@ -261,7 +244,6 @@ const FinalTest: React.FC = () => {
       return;
     }
     
-    // Calculate score
     let correctAnswers = 0;
     testData.questions.forEach((question: any, index: number) => {
       if (selectedAnswers[index] === question.correctAnswer) {
@@ -272,11 +254,9 @@ const FinalTest: React.FC = () => {
     const scorePercentage = Math.round((correctAnswers / testData.questions.length) * 100);
     setScore(scorePercentage);
     
-    // Calculate refund
     const refund = (scorePercentage / 100) * coursePrice;
     setRefundAmount(refund);
     
-    // Update local storage with test results
     const storedCoursesString = localStorage.getItem('enrolledCourses');
     if (storedCoursesString) {
       try {
@@ -288,7 +268,6 @@ const FinalTest: React.FC = () => {
               hasTakenTest: true,
               testScore: scorePercentage,
               refundAmount: refund,
-              // Ensure all course data is preserved
               price: coursePrice,
               title: courseTitle
             };
@@ -297,8 +276,6 @@ const FinalTest: React.FC = () => {
         });
         
         localStorage.setItem('enrolledCourses', JSON.stringify(updatedCourses));
-        
-        // Trigger storage event for dashboard and other components
         window.dispatchEvent(new Event('storage'));
       } catch (error) {
         console.error("Error updating test results:", error);
@@ -498,6 +475,7 @@ const FinalTest: React.FC = () => {
           </Card>
         </div>
       </main>
+      <TestCamera />
       <Footer />
     </div>
   );
