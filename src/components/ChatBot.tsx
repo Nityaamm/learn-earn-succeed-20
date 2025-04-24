@@ -4,7 +4,8 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { MessageSquare, Bot, MessageCircle } from "lucide-react";
+import { MessageSquare, Bot } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface Message {
   role: 'user' | 'assistant';
@@ -15,15 +16,63 @@ export const ChatBot = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
-      content: 'Hello! I\'m here to help you with any questions about your courses or general queries. How can I assist you today?'
+      content: 'Hello! I\'m here to help you with any questions. How can I assist you today?'
     }
   ]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [apiKey, setApiKey] = useState('');
+  const { toast } = useToast();
+
+  const generatePerplexityResponse = async (message: string, apiKey: string) => {
+    try {
+      const response = await fetch('https://api.perplexity.ai/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'llama-3.1-sonar-small-128k-online',
+          messages: [
+            {
+              role: 'system',
+              content: 'You are a helpful assistant for an educational platform. Your responses should be accurate, concise, and focused on helping users learn.'
+            },
+            {
+              role: 'user',
+              content: message
+            }
+          ],
+          temperature: 0.2,
+          max_tokens: 1000,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate response');
+      }
+
+      const data = await response.json();
+      return data.choices[0].message.content;
+    } catch (error) {
+      console.error('Error:', error);
+      throw error;
+    }
+  };
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputMessage.trim()) return;
+
+    if (!apiKey) {
+      toast({
+        title: "API Key Required",
+        description: "Please enter your Perplexity API key to continue.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     const userMessage = inputMessage.trim();
     setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
@@ -31,15 +80,15 @@ export const ChatBot = () => {
     setIsLoading(true);
 
     try {
-      // Simple response logic - in a real app, you'd want to connect this to an AI service
-      const botResponse = await generateResponse(userMessage);
-      setMessages(prev => [...prev, { role: 'assistant', content: botResponse }]);
+      const response = await generatePerplexityResponse(userMessage, apiKey);
+      setMessages(prev => [...prev, { role: 'assistant', content: response }]);
     } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to generate response. Please check your API key and try again.",
+        variant: "destructive",
+      });
       console.error('Error generating response:', error);
-      setMessages(prev => [...prev, { 
-        role: 'assistant', 
-        content: 'I apologize, but I encountered an error. Please try again.'
-      }]);
     }
     setIsLoading(false);
   };
@@ -63,6 +112,21 @@ export const ChatBot = () => {
         </SheetHeader>
         
         <div className="flex flex-col h-[calc(100vh-8rem)]">
+          {!apiKey && (
+            <div className="mb-4">
+              <Input
+                type="password"
+                placeholder="Enter your Perplexity API key"
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+                className="mb-2"
+              />
+              <p className="text-xs text-muted-foreground">
+                Enter your Perplexity API key to enable the chatbot. You can get one from the Perplexity website.
+              </p>
+            </div>
+          )}
+
           <ScrollArea className="flex-1 pr-4">
             <div className="space-y-4 mt-4">
               {messages.map((message, index) => (
@@ -99,10 +163,9 @@ export const ChatBot = () => {
               onChange={(e) => setInputMessage(e.target.value)}
               placeholder="Type your message..."
               className="flex-1"
-              disabled={isLoading}
+              disabled={isLoading || !apiKey}
             />
-            <Button type="submit" disabled={isLoading || !inputMessage.trim()}>
-              <MessageCircle className="h-4 w-4 mr-2" />
+            <Button type="submit" disabled={isLoading || !inputMessage.trim() || !apiKey}>
               Send
             </Button>
           </form>
@@ -112,31 +175,5 @@ export const ChatBot = () => {
   );
 };
 
-// Simple response generation logic - replace with actual AI service integration
-const generateResponse = async (message: string): Promise<string> => {
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 1000));
-
-  // Simple keyword-based responses
-  const messageLower = message.toLowerCase();
-  
-  if (messageLower.includes('refund')) {
-    return "You can get a refund based on your test performance! Score 90% or higher on the final test to receive a 90% refund of your course fee.";
-  }
-  
-  if (messageLower.includes('test') || messageLower.includes('exam')) {
-    return "Each course has a final test that you can take once you feel ready. Your performance on this test determines your refund amount - the higher your score, the higher your refund!";
-  }
-  
-  if (messageLower.includes('course') && (messageLower.includes('start') || messageLower.includes('begin'))) {
-    return "You can start your enrolled courses immediately! Just navigate to 'My Courses' and click on the course you want to begin. Each course includes detailed materials and a final test.";
-  }
-  
-  if (messageLower.includes('price') || messageLower.includes('cost')) {
-    return "Our courses range from ₹5,000 to ₹10,000. Remember, you can earn a refund based on your performance in the final test!";
-  }
-
-  return "I'm here to help with any questions about courses, tests, refunds, or general information. Could you please be more specific about what you'd like to know?";
-};
-
 export default ChatBot;
+
