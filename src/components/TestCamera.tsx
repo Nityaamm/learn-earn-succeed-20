@@ -2,7 +2,11 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useToast } from "@/hooks/use-toast";
 
-const TestCamera = () => {
+interface TestCameraProps {
+  isTestSubmitted?: boolean;
+}
+
+const TestCamera = ({ isTestSubmitted = false }: TestCameraProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [error, setError] = useState<string>('');
   const { toast } = useToast();
@@ -27,23 +31,21 @@ const TestCamera = () => {
       }
     };
 
-    startCamera();
+    if (!isTestSubmitted) {
+      startCamera();
+    }
 
     return () => {
-      // Clean up video stream when component unmounts
+      // Clean up video stream when component unmounts or test is submitted
       if (videoRef.current && videoRef.current.srcObject) {
         const stream = videoRef.current.srcObject as MediaStream;
         stream.getTracks().forEach(track => track.stop());
       }
     };
-  }, [toast]);
+  }, [toast, isTestSubmitted]);
 
-  if (error) {
-    return (
-      <div className="bg-destructive/10 text-destructive rounded-lg p-4 text-sm">
-        {error}
-      </div>
-    );
+  if (isTestSubmitted || error) {
+    return null;
   }
 
   return (

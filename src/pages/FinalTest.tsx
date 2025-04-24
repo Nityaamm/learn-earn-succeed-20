@@ -475,7 +475,7 @@ const FinalTest: React.FC = () => {
           </Card>
         </div>
       </main>
-      <TestCamera />
+      <TestCamera isTestSubmitted={isSubmitted} />
       <Footer />
     </div>
   );
