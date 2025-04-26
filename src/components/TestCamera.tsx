@@ -91,7 +91,7 @@ const TestCamera = ({ isTestSubmitted = false }: TestCameraProps) => {
 
   // Object detection loop
   useEffect(() => {
-    let intervalId: NodeJS.Timer;
+    let intervalId: number | undefined;
 
     const detectObjects = async () => {
       if (videoRef.current && model && canvasRef.current) {
@@ -124,12 +124,12 @@ const TestCamera = ({ isTestSubmitted = false }: TestCameraProps) => {
     };
 
     if (model && stream && !isTestSubmitted) {
-      intervalId = setInterval(detectObjects, 200);
+      intervalId = window.setInterval(detectObjects, 200);
     }
 
     return () => {
       if (intervalId) {
-        clearInterval(intervalId);
+        window.clearInterval(intervalId);
       }
     };
   }, [model, stream, isTestSubmitted]);
