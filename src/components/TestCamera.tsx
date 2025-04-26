@@ -2,7 +2,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import * as cocoSsd from '@tensorflow-models/coco-ssd';
-import '@tensorflow/tfjs';
+import * as tf from '@tensorflow/tfjs';
 
 interface TestCameraProps {
   isTestSubmitted?: boolean;
@@ -20,9 +20,12 @@ const TestCamera = ({ isTestSubmitted = false }: TestCameraProps) => {
   useEffect(() => {
     const loadModel = async () => {
       try {
+        // Ensure TensorFlow.js is loaded
+        await tf.ready();
         const loadedModel = await cocoSsd.load();
         setModel(loadedModel);
       } catch (err) {
+        console.error('Model loading error:', err);
         setError('Could not load object detection model');
         toast({
           title: "Model Error",
